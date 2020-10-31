@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 'on');
 require_once 'config/d_b.php';
-
+session_start();
 if(isset($_GET['delete'])) {
     $deleteRow = $_GET['delete'];
 
@@ -33,22 +33,25 @@ if(isset($_GET['delete'])) {
 <body>
 <div class="main_container">
     <header>
-        <?php require_once 'components/header.php'?>
+        <?php include 'components/header.php'?>
     </header>
+    <div class="nav_bar_reade">
+        <?php  include 'components/navBar.php'?>
+    </div>
     <section>
-        <?php require_once 'components/blogPromo.php'?>
+        <?php include 'components/blogPromo.php'?>
     </section>
     <main>
-        <?php require_once 'details.php'?>
+        <?php include 'details.php'?>
     </main>
     <section>
-        <?php require_once 'components/carouselBrands.php'?>
+        <?php include 'components/carouselBrands.php'?>
     </section>
     <section>
-        <?php require_once 'components/newsLetter.php'?>
+        <?php include 'components/newsLetter.php'?>
     </section>
     <footer>
-        <?php require_once 'components/footer.php'?>
+        <?php include 'components/footer.php'?>
     </footer>
 </div>
 

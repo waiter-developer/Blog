@@ -12,7 +12,7 @@
                 <div class="col header_top_contact-form-item">
                     <a href="#" class="jsMyLinkModal header_top_reg-form--link">My Account</a>
                     <div id="myModal" class="modal_window">
-                        <?php require_once 'modal.php'?>
+                        <?php require_once 'modal.php';?>
                         <span id="myModal_close" class="close"><i class="far fa-times-circle"></i></span>
                     </div>
                     <div id="myOverlay"></div>
@@ -32,7 +32,7 @@
 <div class="container">
     <div class="row justify-content-between header_logo">
         <div class="col-2">
-            <a href="#">
+            <a href="index.php">
                 <img src="Images/Logo_.png" class="header_logo_img" alt="One plus" title="One plus">
             </a>
         </div>

@@ -3,6 +3,8 @@ error_reporting(E_ALL);
 ini_set('display_errors', 'on');
 require_once 'config/d_b.php';
 
+$stmtTags  = $pdo->query('SELECT * FROM `blog_tag`')->fetchAll();
+$rowTags = $stmtTags;
 
 
 $articleId = $_GET['id']?? '';
@@ -23,18 +25,49 @@ if(isset($_POST['updateArticle'])){
 
     $data = array(
         'id'      => $articleId,
-        'title'    => $_POST['name'],
+        'title'   => $_POST['name'],
         'text'    => $_POST['content'],
-        'tags'    => $_POST['tags'],
-        'image'   => $imagePath
+        'image'   => $imagePath,
+        'nowTime' => date('Y/m/d h:i:s', time())
     );
 
-    $stmt= $pdo->prepare("UPDATE `blog_article` SET `title`=:title, `text`=:text, `tags`=:tags, `image`=:image WHERE `id`=:id");
+
+    $arrTags = $_POST['tags'];
+    $tagsId = [];
+
+    foreach ($arrTags as $key => $props){
+
+        $stmtTagId = $pdo -> prepare("SELECT `id` FROM `blog_tag` WHERE `tag`=?");
+        $stmtTagId -> execute(array($props));
+        $something = $stmtTagId -> fetch();
+        $other = $something['id'] ?? '';
+
+        if(!empty($other)){
+            $tagsId[] = $other;
+        }else{
+            $stmtTag = $pdo->prepare("INSERT INTO `blog_tag` (`tag`) VALUE (:tag_name)");
+            $stmtTag -> execute(array('tag_name' => $props));
+            $tagsId[] = $pdo -> lastInsertId();
+        }
+    }
+
+
+    $stmtArtTagDel = $pdo->prepare("DELETE FROM `blog_article_tag` WHERE `article_id`=?");
+    $stmtArtTagDel -> execute(array($articleId));
+
+
+    $sqlListArtTag = "INSERT INTO `blog_article_tag` (`article_id`, `tag_id`) VALUES (:article_id, :tag_id)";
+    $stmtListArtTag  = $pdo->prepare($sqlListArtTag);
+    foreach ($tagsId as $tagId){
+        $stmtListArtTag ->execute(array('article_id' => $articleId, 'tag_id' => $tagId));
+    }
+
+
+    $stmt= $pdo->prepare("UPDATE `blog_article` SET `title`=:title, `text`=:text, `image`=:image, `date`=:nowTime WHERE `id`=:id");
     $stmt->execute($data);
 
     header('Location: index.php');
 }
-
 
 $stmt = $pdo -> prepare('SELECT * FROM `blog_article` WHERE id=?');
 $stmt -> execute(array($articleId));
@@ -76,13 +109,16 @@ $row = $stmt -> fetch();
                     </div>
                     <div class="form-group">
                         <label for="tag">Tags</label>
-                        <input type="text" class="form-control" name="tags" id="tag" value="<?php echo $row['tags'];?>">
+                        <select type="text" class="form-control" name="tags[]" id="tag">
+                            <option></option>
+                            <?php foreach($rowTags as $key => $value){?>
+                                <option value="<?php echo $value['tag']?>"><?php echo $value['tag']?></option>
+                            <?php }?>
+                        </select>
                     </div>
-                    <div class="upload_btn_wrapper">
-                        <button class="btn_down">Upload image</button>
-                        <input type="file" class="upload_input" name="image" required>
+                    <div class="form-group article_sand_box-download">
+                        <input type="file" id="upload_img" class="form-control article_sand_box-download-btn" name="image" required accept="image/*">
                     </div>
-                    <br>
                     <div class="box_submit">
                         <input type="submit" name="updateArticle" class="article_sand_box--submit" value="Edit Article">
                     </div>

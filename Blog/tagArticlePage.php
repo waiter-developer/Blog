@@ -33,7 +33,7 @@ require_once 'config/d_b.php';
         <?php include 'components/blogPromo.php'?>
     </section>
     <main>
-        <?php include 'newsView.php'?>
+        <?php include 'upArticle.php'?>
     </main>
     <section>
         <?php include 'components/carouselBrands.php'?>

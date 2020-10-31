@@ -2,8 +2,14 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 'on');
 require_once 'config/d_b.php';
+session_start();
 
-if(isset($_POST['register'])){
+if(isset($_POST['email']) && isset($_POST['password'])){
+
+    header('Access-Control-Allow-Origin: *');
+    header('Content-type: application/json');
+
+    $confirm = md5($_POST['confirmPassword']);
 
     $data = array(
         'name'     => $_POST['name'],
@@ -11,21 +17,34 @@ if(isset($_POST['register'])){
         'date'     => $_POST['date'],
         'email'    => $_POST['email'],
         'gender'   => $_POST['gender'],
-        'password' => $_POST['password'],
+        'password' => md5($_POST['password'])
     );
 
-    $sql = "INSERT INTO `blog_users` (`name`, `surname`, `login_email`, `password`, `gender`, `birthday`) VALUES (:name, :surname, :email, :password, :gender, :date)";
-    $stmt= $pdo->prepare($sql);
-    $stmt->execute($data);
+    $stmt = $pdo -> prepare('SELECT `login_email` FROM `blog_users` WHERE `login_email`=?');
+    $stmt -> execute(array($_POST['email']));
+    $row = $stmt -> fetch();
 
-    if($stmt){
-        header("Location: index.php");
-        exit;
+    if($row == 0){
+
+        if($data['password'] == $confirm){
+            $sql = "INSERT INTO `blog_users` (`name`, `surname`, `login_email`, `password`, `gender`, `birthday`) VALUES (:name, :surname, :email, :password, :gender, :date)";
+            $stmt= $pdo->prepare($sql);
+            $stmt->execute($data);
+            $lastId = $pdo -> lastInsertId();
+
+            if($stmt){
+                $_SESSION['auth'] = true;
+                $_SESSION['user_id'] = $lastId;
+                echo json_encode(array('ok' => 'Successful'));
+            }
+        } else{
+            echo json_encode(array('no' =>'The password not equally together'));
+        }
+
+    }else {
+        echo json_encode(array('no' => 'Ooops, The user exist similar email yet!'));
     }
-}
-
-
-?>
+}else{?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -63,42 +82,48 @@ if(isset($_POST['register'])){
                         <i class="fas fa-user-circle" style="box-shadow: 0px 0px 10px 4px orange;border-radius: 50%"></i>
                     </h4>
                 </header>
-                <form action="" method="post">
-                    <div class="form-group">
+                <span class="jsRegisterResult"></span>
+                <form id="jsRegisterForm"  class="jsRegisterForm" action="Login.php" method="post">
+                    <div class="jsRegisterFormGroup form-group">
                         <label>First name</label>
-                        <input type="text" name="name" class="form-control" required>
+                        <input type="text" name="name" class="jsRegisterInput form-control">
+                        <span class="jsRegisterResponse"></span>
                     </div>
-                    <div class="form-group">
+                    <div class="jsRegisterFormGroup form-group">
                         <label>Last name</label>
-                        <input type="text"  class="form-control" name="surname" required>
+                        <input type="text"  class="jsRegisterInput form-control" name="surname">
+                        <span class="jsRegisterResponse"></span>
                     </div>
-                    <div class="form-group">
+                    <div class="jsRegisterFormGroup form-group">
                         <label>Birthday</label>
-                        <input type="date" class="form-control" name="date" placeholder="dd-mm-yyyy" required>
+                        <input type="date" class="jsRegisterInput form-control" name="date" placeholder="dd-mm-yyyy">
+                        <span class="jsRegisterResponse"></span>
                     </div>
-                    <div class="form-group">
+                    <div class="jsRegisterFormGroup form-group">
                         <label>Login</label>
-                        <input type="email" class="form-control" name="email" placeholder="Email" required>
+                        <input type="email" class="jsRegisterInput form-control" name="email" placeholder="Email">
+                        <span class="jsRegisterEmail"></span>
                     </div>
                     <div class="form-group">
-                        <label class="custom-control custom-radio custom-control-inline">
-                            <input class="custom-control-input" type="radio" name="gender" value="male">
-                            <span class="custom-control-label"> Male </span>
+                        <label class="custom-control custom-radio custom-control-inline" for="login_checkbox_male">
+                            <input id="login_checkbox_male" class="custom-control-input login_checkbox_male" type="radio" name="gender" value="male">
+                            <span class="custom-control-label">Male</span>
                         </label>
-                        <label class="custom-control custom-radio custom-control-inline">
-                            <input class="custom-control-input" type="radio" name="gender" value="female">
-                            <span class="custom-control-label"> Female </span>
+                        <label class="custom-control custom-radio custom-control-inline" for="login_checkbox_female">
+                            <input  id="login_checkbox_female" class="custom-control-input" type="radio" name="gender" value="female">
+                            <span  class="custom-control-label">Female</span>
                         </label>
                     </div>
-                    <div class="form-row">
+                    <div class="jsRegisterFormGroup form-row">
                         <div class="form-group col-md-6">
                             <label>Create password</label>
-                            <input class="form-control" type="password" name="password" required>
+                            <input class="jsRegisterInput form-control" type="password" name="password">
                         </div>
-                        <div class="form-group col-md-6">
+                        <div class="jsRegisterFormGroup form-group col-md-6">
                             <label>Repeat password</label>
-                            <input class="form-control" type="repeatedPassword" required>
+                            <input class="jsRegisterInput form-control" type="password" name="confirmPassword">
                         </div>
+                        <span class="jsRegisterPassword"></span>
                     </div>
                     <div class="form-group">
                         <div class="form-check">
@@ -119,7 +144,6 @@ if(isset($_POST['register'])){
         </div>
     </div>
 </div>
-
 <script src="js/jquery-ui.min.js"></script>
 <script src="js/jquery-3.5.1.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
@@ -129,3 +153,5 @@ if(isset($_POST['register'])){
 <script src="js/index.js"></script>
 </body>
 </html>
+
+<?php }?>

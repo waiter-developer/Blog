@@ -3,22 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 'on');
 require_once 'config/d_b.php';
 
-$arrMonths = array(
-        '01' => 'JAN',
-        '02' => 'FEB',
-        '03' => 'MAR',
-        '04' => 'APR',
-        '05' => 'MAY',
-        '06' => 'JUN',
-        '07' => 'JUL',
-        '08' => 'AUG',
-        '09' => 'SEP',
-        '10' => 'OCT',
-        '11' => 'NOV',
-        '12' => 'DEC',
-);
-
-$stmt  = $pdo->query('SELECT * FROM `blog_article`')->fetchAll();
+$stmt  = $pdo->query('SELECT *, MONTH(date) AS month, DAY(date) AS day FROM `blog_article`')->fetchAll();
 
 $data = $stmt;
 
@@ -32,10 +17,10 @@ $data = $stmt;
                     <img class="card-img-top" src="<?php echo $value['image']?>" alt="<?php echo $value['title'];?>" title="<?php echo $value['title'];?>">
                     <div class="container_news_img_date">
                         <span class="container_news_img_date--number">
-                            24
+                            <?php echo $value['day']?>
                         </span>
                         <span class="container_news_img_date--month">
-                            DEC
+                            <?php echo array_search($value['month'], $arrMonths) ?>
                         </span>
                     </div>
                 </div>
